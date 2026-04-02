@@ -14,7 +14,8 @@
   /* global ExtensionCommon */
   /* global Components */
   /* global ChromeUtils */
-  const { Services } = ChromeUtils.importESModule("resource://gre/modules/Services.sys.mjs");
+  // In Experiment-APIs ist Services oft global, wir nutzen einen sicheren Fallback
+  const Services = globalThis.Services;
 
   // Input & output stream constants.
   const STREAM_BUFFERED = 0;
