@@ -12,9 +12,9 @@
   "default_locale": "en_US",
   "browser_specific_settings": {
     "gecko": {
-      "id": "sieve@mozdev.org",
+      "id": "sieve.remsrc@mozdev.org",
       "update_url": "https://thsmi.github.io/sieve/update.json",
-      "strict_min_version": "68.0a1"
+      "strict_min_version": "128.0"
     }
   },
   "permissions": [

@@ -14,7 +14,7 @@
   /* global ExtensionCommon */
   /* global Components */
   /* global ChromeUtils */
-  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const { Services } = ChromeUtils.importESModule("resource://gre/modules/Services.sys.mjs");
 
   // Input & output stream constants.
   const STREAM_BUFFERED = 0;
