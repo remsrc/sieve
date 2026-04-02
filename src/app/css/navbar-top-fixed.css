@@ -1,0 +1,85 @@
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+#ctx {
+  display: inline-flex;
+  height: 100%;
+  width: 100%;
+  flex-direction: column;
+}
+
+#tabs-content > * {
+  height: 100%;
+  width: 100%;
+  border: 0;
+}
+
+#tabs-content {
+  display: inline-flex;
+  height: 100%;
+  width: 100%;
+}
+
+#tabs-container {
+  height: 50px;
+  padding: 0;
+  background-color: var(--bs-body-color) !important;
+}
+
+html[data-bs-theme=dark] #tabs-container {
+  background-color: rgba(var(--bs-body-color-rgb), 0.03) !important;
+}
+
+#tabs-scroll-left {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 20px;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+
+  text-align: center;
+  border-bottom: var(--bs-border-width) solid var(--bs-border-color-translucent) !important;
+
+  cursor: pointer;
+}
+
+#tabs-scroll-right {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+
+  text-align: center;
+  border-bottom: var(--bs-border-width) solid var(--bs-border-color-translucent) !important;
+
+  cursor: pointer;
+}
+
+#tabs-scroll-box {
+  position: absolute;
+  bottom: 0;
+  left: 20px;
+  right: 20px;
+
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+#tabs-items {
+  position: relative;
+  border-bottom: none;
+  display: block;
+
+  border-bottom: var(--bs-border-width) solid var(--bs-border-color-translucent) !important;
+}
+
+#tabs-items > li {
+  display: inline-block;
+}

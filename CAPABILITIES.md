@@ -1,0 +1,1 @@
+[Moved to the wiki](https://github.com/thsmi/sieve/wiki/Capabilities)
