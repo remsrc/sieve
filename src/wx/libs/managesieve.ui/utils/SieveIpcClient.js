@@ -10,8 +10,8 @@
  */
 
 /* global browser */
-import { SieveLogger } from "./SieveLogger.mjs";
-import { SieveAbstractIpcClient } from "./SieveAbstractIpcClient.mjs";
+import { SieveLogger } from "./SieveLogger.js";
+import { SieveAbstractIpcClient } from "./SieveAbstractIpcClient.js";
 
 /**
  * An abstract implementation for a inter process/frame communication.
@@ -42,7 +42,9 @@ class SieveWxIpcClient extends SieveAbstractIpcClient {
       message = JSON.stringify(message);
     }
 
-    browser.runtime.sendMessage(message);
+    browser.runtime.sendMessage(message).catch(err => {
+      // Ignoriere Fehler, wenn der Hintergrund noch nicht geladen oder bereits geschlossen ist.
+    });
   }
 }
 

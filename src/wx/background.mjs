@@ -11,11 +11,11 @@
 
 /* global browser */
 import { SieveSession } from "./libs/libManageSieve/SieveSession.mjs";
-import { SieveCertValidationException } from "./libs/libManageSieve/SieveExceptions.mjs";
+import { SieveCertValidationException } from "./common/libs/libManageSieve/SieveExceptions.mjs"; import { SieveClientException } from "./../common/libs/libManageSieve/SieveExceptions.mjs"; import { SieveException } from "./../common/libs/libManageSieve/SieveExceptions.mjs";
 
-import { SieveLogger } from "./libs/managesieve.ui/utils/SieveLogger.mjs";
-import { SieveIpcClient } from "./libs/managesieve.ui/utils/SieveIpcClient.mjs";
-import { SieveAccounts } from "./libs/managesieve.ui/settings/logic/SieveAccounts.mjs";
+import { SieveLogger } from "./common/libs/managesieve.ui/utils/SieveLogger.mjs";
+import { SieveIpcClient } from "./common/libs/managesieve.ui/utils/SieveIpcClient.mjs";
+import { SieveAccounts } from "./common/libs/managesieve.ui/settings/logic/SieveAccounts.mjs";
 
 (async function () {
 
