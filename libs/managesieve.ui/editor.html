@@ -1,0 +1,81 @@
+<!--
+CHANGE (remsrc):
+Replaced hardcoded light colors with Bootstrap CSS variables.
+
+- Uses var(--bs-border-color) instead of fixed #eee
+- Ensures proper rendering in dark mode
+- Aligns editor visuals with Bootstrap theming system
+
+Rationale:
+Hardcoded colors prevented correct dark mode rendering.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="./../../libs/bootstrap/css/bootstrap.min.css">
+
+  <style>
+/* CHANGE (remsrc):
+   Replaced static border color (#eee) with Bootstrap variable
+   to support dark mode rendering */    
+    .cm-editor,
+    .cm-editor.cm-focused,
+    #sieve-editor-toolbar,
+    #sieve-editor-errors {
+      border-color: var(--bs-border-color);
+    }
+
+    .cm-editor .cm-panels-top {
+      border-bottom: none !important;
+    }
+
+    #sieve-widget-editor {
+      border: 0;
+    }
+
+    .sticky {
+      position: sticky;
+      top: 0px;
+      z-index: 10;
+      background-color: var(--bs-body-bg);
+    }
+    html {
+      overflow-y: scroll;
+    }
+
+    #sieve-editor-toolbar {
+      border-bottom: 1px solid var(--bs-border-color);
+    }
+
+    #sieve-editor-errors {
+      border-bottom: 1px solid var(--bs-border-color);
+    }
+
+    #sieve-editor-errors:empty {
+      display:none;
+    }
+
+  </style>
+</head>
+
+<body>
+  <div id="sieve-editor" class="container">
+  </div>
+
+  <div id="ctx"></div>
+
+  <!-- Bootstrap core JavaScript
+    ================================================== -->
+  <!-- Placed at the end of the document so the pages load faster -->
+  <script src="./../../libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <script type="module" src="editor.js"></script>
+
+</body>
+
+</html>

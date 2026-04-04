@@ -1,5 +1,0 @@
-*.js text eol=lf
-*.jsm text eol=lf
-*.mjs text eol=lf
-*.html text eol=lf
-*.tpl text eol=lf
