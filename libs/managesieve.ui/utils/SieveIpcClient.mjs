@@ -36,15 +36,37 @@ class SieveWxIpcClient extends SieveAbstractIpcClient {
    * @inheritdoc
    */
   // eslint-disable-next-line no-unused-vars
-  static dispatch(message, target) {
-
-    if (typeof (message) !== 'string') {
+  /**
+ * CHANGE (remsrc):
+ * Hardened runtime message dispatch during window/editor shutdown.
+ *
+ * - Wraps browser.runtime.sendMessage(...) in controlled error handling
+ * - Detects the "Receiving end does not exist" shutdown condition
+ * - Prevents unhandled promise rejections when the target side is already gone
+ *
+ * Rationale:
+ * Closing the addon window can race with IPC teardown. This is a normal
+ * lifecycle condition and should not surface as an uncaught runtime error.
+ */
+  static async dispatch(message, target) {
+    if (typeof message !== "string") {
       message = JSON.stringify(message);
     }
 
-    browser.runtime.sendMessage(message).catch(err => {
-      // Ignoriere Fehler, wenn der Hintergrund noch nicht geladen oder bereits geschlossen ist.
-    });
+    try {
+      await browser.runtime.sendMessage(message);
+    } catch (ex) {
+      const msg = String(ex && ex.message ? ex.message : ex);
+
+      if (msg.includes("Could not establish connection. Receiving end does not exist")) {
+        this.getLogger().logIpc?.(
+          "[SieveIpcClient] IPC target already gone during shutdown"
+        );
+        return;
+      }
+
+      throw ex;
+    }
   }
 }
 

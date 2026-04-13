@@ -34,6 +34,15 @@ Hardcoded colors prevented correct dark mode rendering.
       border-bottom: none !important;
     }
 
+    html[data-bs-theme=dark] .activeline {
+      background-color: rgba(var(--bs-body-color-rgb), 0.03) !important;
+    }
+
+    html[data-bs-theme=dark] #sieve-editor-toolbar {
+      border-bottom: var(--bs-border-width) solid var(--bs-border-color-translucent) !important;
+    }
+
+
     #sieve-widget-editor {
       border: 0;
     }
@@ -44,6 +53,7 @@ Hardcoded colors prevented correct dark mode rendering.
       z-index: 10;
       background-color: var(--bs-body-bg);
     }
+
     html {
       overflow-y: scroll;
     }
@@ -74,7 +84,7 @@ Hardcoded colors prevented correct dark mode rendering.
   <!-- Placed at the end of the document so the pages load faster -->
   <script src="./../../libs/bootstrap/js/bootstrap.bundle.min.js"></script>
 
-  <script type="module" src="editor.js"></script>
+  <script type="module" src="editor.mjs"></script>
 
 </body>
 

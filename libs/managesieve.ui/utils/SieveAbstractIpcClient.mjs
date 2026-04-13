@@ -197,8 +197,19 @@ class SieveAbstractIpcClient {
    * @returns {*}
    *   the messages response or an exception in case of an error.
    */
+  /**
+   * CHANGE (remsrc):
+   * Improved IPC request lifecycle handling for failed dispatch scenarios.
+   *
+   * - Awaits the dispatch step
+   * - Removes pending response handlers when dispatch fails
+   * - Rejects the request promise instead of leaving it unresolved
+   *
+   * Rationale:
+   * Without explicit cleanup, failed dispatch attempts could leave response
+   * handlers behind and produce hanging promises during shutdown.
+   */
   static async sendMessage(subject, action, payload, target) {
-
     const id = this.generateId();
 
     const msg = JSON.stringify({
@@ -210,7 +221,6 @@ class SieveAbstractIpcClient {
     });
 
     return await new Promise((resolve, reject) => {
-
       const onResponse = (message) => {
         if (message.error) {
           reject(message.error);
@@ -221,7 +231,20 @@ class SieveAbstractIpcClient {
       };
 
       _responseHandlers.set(id, onResponse);
-      this.dispatch(msg, target);
+
+      (async () => {
+        try {
+          const dispatched = await this.dispatch(msg, target);
+
+          if (dispatched === false) {
+            _responseHandlers.delete(id);
+            reject(new Error("IPC receiver not available"));
+          }
+        } catch (ex) {
+          _responseHandlers.delete(id);
+          reject(ex);
+        }
+      })();
     });
   }
 }

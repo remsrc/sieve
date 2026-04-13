@@ -8,18 +8,40 @@
  * The initial author of the code is:
  *   Thomas Schmid <schmid-thomas@gmx.net>
  */
-
+/**
+ * Modification (2026-04-04, remsrc)
+ *
+ * Summary:
+ * Added compatibility layer for indentation settings.
+ *
+ * Details:
+ * - Introduced mapping between:
+ *     "indentation-unit" (CM6)
+ *     and legacy keys:
+ *       "indentation-width", "indentation-policy".
+ * - Updated handlers:
+ *     get-preference
+ *     get-default-preference
+ *     set-preference
+ *     set-default-preference
+ * - Ensured backward compatibility with existing stored settings.
+ *
+ * Rationale:
+ * Fixes:
+ *   - "Unknown settings indentation-unit"
+ * by bridging new editor model with legacy settings backend.
+ */
 /* global browser */
-import { SieveSession } from "./libs/libManageSieve/SieveSession.js";
+import { SieveSession } from "./libs/libManageSieve/SieveSession.mjs";
 import {
   SieveCertValidationException,
   SieveClientException,
   SieveException
 } from "./libs/libManageSieve/SieveExceptions.mjs";
 
-import { SieveLogger } from "./libs/managesieve.ui/utils/SieveLogger.js";
-import { SieveIpcClient } from "./libs/managesieve.ui/utils/SieveIpcClient.js";
-import { SieveAccounts } from "./libs/managesieve.ui/settings/logic/SieveAccounts.js";
+import { SieveLogger } from "./libs/managesieve.ui/utils/SieveLogger.mjs";
+import { SieveIpcClient } from "./libs/managesieve.ui/utils/SieveIpcClient.mjs";
+import { SieveAccounts } from "./libs/managesieve.ui/settings/logic/SieveAccounts.mjs";
 
 (async function () {
 
@@ -178,6 +200,27 @@ import { SieveAccounts } from "./libs/managesieve.ui/settings/logic/SieveAccount
 
 
   // ------------------------------------------------------------------------ //
+  function indentationUnitToLegacy(unit) {
+    if (typeof unit !== "string" || unit.length === 0)
+      return { width: 2, tabs: false };
+
+    if (/^\t+$/.test(unit))
+      return { width: unit.length, tabs: true };
+
+    if (/^ +$/.test(unit))
+      return { width: unit.length, tabs: false };
+
+    throw new Error("Invalid indentation-unit");
+  }
+
+  function legacyToIndentationUnit(width, tabs) {
+    width = Number.parseInt(width, 10);
+
+    if (Number.isNaN(width) || width < 1)
+      width = 2;
+
+    return tabs ? "\t".repeat(width) : " ".repeat(width);
+  }
 
   const actions = {
     // account endpoints...
@@ -509,13 +552,27 @@ import { SieveAccounts } from "./libs/managesieve.ui/settings/logic/SieveAccount
     },
 
     "get-preference": async (msg) => {
-
       const name = msg.payload.data;
       const account = msg.payload.account;
 
-      logger.logAction(`Set value ${name} on ${account}`);
+      logger.logAction(`Get value ${name} on ${account}`);
 
-      const value = await accounts.getAccountById(account).getEditor().getValue(name);
+      const editor = accounts.getAccountById(account).getEditor();
+
+      if (name === "indentation-unit") {
+        let width = await editor.getValue("indentation-width");
+        let tabs = await editor.getValue("indentation-policy");
+
+        if (width === null || typeof width === "undefined")
+          width = await accounts.getEditor().getValue("indentation-width");
+
+        if (tabs === null || typeof tabs === "undefined")
+          tabs = await accounts.getEditor().getValue("indentation-policy");
+
+        return legacyToIndentationUnit(width, tabs);
+      }
+
+      const value = await editor.getValue(name);
 
       if (value === null)
         return await actions["get-default-preference"](msg);
@@ -528,7 +585,15 @@ import { SieveAccounts } from "./libs/managesieve.ui/settings/logic/SieveAccount
 
       logger.logAction(`Get default value for ${name}`);
 
-      return await accounts.getEditor().getValue(name);
+      const editor = accounts.getEditor();
+
+      if (name === "indentation-unit") {
+        const width = await editor.getValue("indentation-width");
+        const tabs = await editor.getValue("indentation-policy");
+        return legacyToIndentationUnit(width, tabs);
+      }
+
+      return await editor.getValue(name);
     },
 
     "set-preference": async (msg) => {
@@ -538,7 +603,16 @@ import { SieveAccounts } from "./libs/managesieve.ui/settings/logic/SieveAccount
 
       logger.logAction(`Set value ${name} on ${account}`);
 
-      await accounts.getAccountById(account).getEditor().setValue(name, value);
+      const editor = accounts.getAccountById(account).getEditor();
+
+      if (name === "indentation-unit") {
+        const legacy = indentationUnitToLegacy(value);
+        await editor.setValue("indentation-width", legacy.width);
+        await editor.setValue("indentation-policy", legacy.tabs);
+        return;
+      }
+
+      await editor.setValue(name, value);
     },
 
     "set-default-preference": async (msg) => {
@@ -547,10 +621,27 @@ import { SieveAccounts } from "./libs/managesieve.ui/settings/logic/SieveAccount
 
       logger.logAction(`Set default value for ${name}`);
 
-      await accounts.getEditor().setValue(name, value);
-    }
-  };
+      const editor = accounts.getEditor();
 
+      if (name === "indentation-unit") {
+        const legacy = indentationUnitToLegacy(value);
+        await editor.setValue("indentation-width", legacy.width);
+        await editor.setValue("indentation-policy", legacy.tabs);
+        return;
+      }
+
+      await editor.setValue(name, value);
+    },
+    "open-developer-tools": async function () {
+      logger.logAction("Open developer tools");
+      return false;
+    },
+
+    "reload-ui": async function () {
+      logger.logAction("Reload UI");
+      browser.runtime.reload();
+    }
+  }
   for (const [key, value] of Object.entries(actions)) {
     SieveIpcClient.setRequestHandler("core", key, value);
   }

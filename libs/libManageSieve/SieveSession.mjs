@@ -9,7 +9,7 @@
  *   Thomas Schmid <schmid-thomas@gmx.net>
  */
 
-import { SieveAbstractSession } from "./SieveAbstractSession.js";
+import { SieveAbstractSession } from "./SieveAbstractSession.mjs";
 
 /**
  * A mozilla specific session implementation.

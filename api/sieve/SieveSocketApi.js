@@ -48,6 +48,8 @@
   const STATE_OPEN = 2;
   const STATE_CLOSING = 3;
 
+const DEFAULT_CONNECT_TIMEOUT = 15000;
+
   const SOCKET_STATUS = {
     // eslint-disable-next-line no-magic-numbers
     0x804B0003 : "resolving",
@@ -115,6 +117,9 @@
 
       this.handler = {};
 
+      this.connectTimer = null;
+      this.connectTimeout = DEFAULT_CONNECT_TIMEOUT;
+
       this.thread = Cc["@mozilla.org/thread-manager;1"]
         .getService(Ci.nsIThreadManager)
         .mainThread;
@@ -143,6 +148,68 @@
       console.log(`[${(new Date()).toISOString()}] [${this.port}] ${message}`);
     }
 
+    /**
+     * Clears the currently active connect timeout.
+     */
+     clearConnectTimeout() {
+      if (!this.connectTimer)
+        return;
+
+      try {
+        this.connectTimer.cancel();
+      } catch (ex) {
+        this.log(`[SieveSocketApi] Timer cancel failed: ${ex}`);
+      }
+
+      this.connectTimer = null;
+    }
+    /**
+     * Arms a watchdog timeout for the connect phase.
+     *
+     * If the socket remains in STATE_CONNECTING for too long, the connection
+     * attempt is aborted and the registered error/close handlers are notified.
+     */
+     armConnectTimeout() {
+      this.clearConnectTimeout();
+
+      this.connectTimer = Cc["@mozilla.org/timer;1"]
+        .createInstance(Ci.nsITimer);
+
+      this.connectTimer.init(async () => {
+        if (this.state !== STATE_CONNECTING)
+          return;
+
+        this.log("[SieveSocketApi] Connect timeout reached");
+
+        const error = {
+          type: "SocketError",
+          status: NS_ERROR_FAILURE,
+          message: "Connection timed out while connecting"
+        };
+
+        try {
+          if (this.handler && this.handler.onError)
+            await this.handler.onError(error);
+        } catch (ex) {
+          this.log(`[SieveSocketApi] Error handler failed: ${ex}`);
+        }
+
+        try {
+          this.disconnect();
+          this.state = STATE_CLOSED;
+        } catch (ex) {
+          this.log(`[SieveSocketApi] Disconnect failed: ${ex}`);
+        }
+
+        try {
+          if (this.handler && this.handler.onClose)
+            await this.handler.onClose();
+        } catch (ex) {
+          this.log(`[SieveSocketApi] Close handler failed: ${ex}`);
+        }
+
+      }, this.connectTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
+    }
 
     /**
      * We need this wrapper for compatibility. Stating Thunderbird 69
@@ -311,10 +378,13 @@
      * Helps debugging STARTTLS negotiation on recent Thunderbird versions.
      */
     onTransportStatus(transport, status, progress, progressMax) {
+      const normalizedStatus = status >>> 0;
+
       this.log(`[SieveSocketApi:onTransportStatus()] Status change to `
-        + `${SOCKET_STATUS[status] || "unknown"} (${status.toString(16)}) ...`);
+        + `${SOCKET_STATUS[normalizedStatus] || "unknown"} (${normalizedStatus.toString(16)}) ...`);
 
       if (status === Ci.nsISocketTransport.STATUS_CONNECTED_TO) {
+        this.clearConnectTimeout();
         this.state = STATE_OPEN;
         this.registerAsyncWait(this.instream.QueryInterface(Ci.nsIAsyncInputStream));
         this.log("[SieveSocketApi:onTransportStatus()] ... socket now in open state");
@@ -369,6 +439,7 @@
      */
     async onInputStreamError(ex) {
       this.log(`[SieveSocketApi:onInputStreamError()] Parsing error information...`);
+      this.clearConnectTimeout();
       let status = NS_ERROR_FAILURE;
 
       if (ex.result)
@@ -526,6 +597,7 @@
     disconnect() {
 
       this.log("[SieveSocketApi:Disconnect()] Disconnecting socket..." );
+      this.clearConnectTimeout();
 
       if (this.state === STATE_CLOSED || this.state === STATE_CLOSING) {
         this.log("[SieveSocketApi:Disconnect()] ... already done" );
@@ -759,6 +831,7 @@
       this.socket = this.createTransport(aProxyInfo);
 
       this.state = STATE_CONNECTING;
+      this.armConnectTimeout();
 
       this.socket.setEventSink(this, this.thread);
 

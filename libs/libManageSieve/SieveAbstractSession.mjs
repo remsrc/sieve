@@ -135,8 +135,18 @@ class SieveAbstractSession {
    * If supported the noop command is used otherwise a capability
    * request is used.
    */
+   /**
+   * remsrc 06.04.2026
+   * returns, when no active connection
+   */
   async onIdle() {
     this.getLogger().logSession("Sending keep alive packet...");
+
+    if (!this.getSieve() || !this.isConnected()) {
+      this.getLogger().logSession("... skipping keep alive, no active connection");
+      return;
+    }
+
     try {
       await this.noop();
     } catch (ex) {
@@ -454,6 +464,10 @@ class SieveAbstractSession {
    * @returns {SieveAbstractResponse}
    *   the response for the first request or an exception in case of an error.
    */
+   /**
+   * remsrc 06.04.2026
+   * make promisify defensive, when there ist no active connection
+   */
   async promisify(request, init) {
 
     // eslint-disable-next-line no-async-promise-executor
@@ -488,7 +502,11 @@ class SieveAbstractSession {
       });
 
 
-      await (this.getSieve().addRequest(request));
+      const sieve = this.getSieve();
+      if (!sieve)
+        throw new SieveClientException("No active sieve connection");
+
+      await sieve.addRequest(request);
 
       if (init)
         await init();
