@@ -1,7 +1,7 @@
 {
-  "name": "Sieve",
+  "name": "Sieve Reloaded",
   "description": "__MSG_extensionDescription__",
-  "version": "0.6.1",
+  "version": "1.0.0",
   "icons": {
     "32": "libs/icons/sieve32.png",
     "64": "libs/icons/sieve64.png",

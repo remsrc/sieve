@@ -1,62 +1,59 @@
 [
   {
     "namespace": "sieve.menu",
-    "description": "Sieve Menu Glue Code",
+    "description": "Sieve menu integration helpers",
     "functions": [
       {
         "name": "has",
         "type": "function",
-        "description": "Checks if the menu item exists.",
+        "description": "Checks whether the specified menu item exists in the given window.",
         "async": true,
         "parameters": [
           {
             "name": "windowId",
             "type": "string",
-            "description": "The unique window id"
+            "description": "The unique window id."
           },
           {
             "name": "widgetId",
             "type": "string",
-            "description": "the widget unique id",
-            "additionalProperties": true
+            "description": "The widget id to look up."
           }
         ]
       },
       {
         "name": "add",
         "type": "function",
-        "description": "Adds the menu item, in case it exists it will be overwritten",
+        "description": "Adds a menu widget to the given window. If an item with the same id already exists, it is replaced.",
         "async": true,
         "parameters": [
           {
             "name": "windowId",
             "type": "string",
-            "description": "The unique window id"
+            "description": "The unique window id."
           },
           {
             "name": "widget",
             "type": "object",
-            "description": "the widget description",
-            "additionalProperties": true
+            "description": "The widget definition."
           }
         ]
       },
       {
         "name": "remove",
         "type": "function",
-        "description": "Removes the menu item.",
+        "description": "Removes the specified menu widget from the given window.",
         "async": true,
         "parameters": [
           {
             "name": "windowId",
             "type": "string",
-            "description": "The unique window id"
+            "description": "The unique window id."
           },
           {
             "name": "widgetId",
             "type": "string",
-            "description": "the widget unique id",
-            "additionalProperties": true
+            "description": "The widget id to remove."
           }
         ]
       }
@@ -65,8 +62,19 @@
       {
         "name": "onCommand",
         "type": "function",
-        "description": "Invoked when the menu is activated",
-        "parameters": []
+        "description": "Fired when a registered menu item is activated.",
+        "parameters": [
+          {
+            "name": "windowId",
+            "type": "string",
+            "description": "The unique window id."
+          },
+          {
+            "name": "id",
+            "type": "string",
+            "description": "The activated widget id."
+          }
+        ]
       }
     ]
   }

@@ -1,72 +1,72 @@
 [
   {
     "namespace": "sieve.socket",
-    "description": "Sieve Socket Connection",
+    "description": "Sieve socket connection helpers",
     "functions": [
       {
         "name": "create",
         "type": "function",
-        "description": "Creates (but does not connect) a server connection",
+        "description": "Creates a socket handle for a remote server without connecting yet.",
         "async": true,
         "parameters": [
           {
             "name": "host",
             "type": "string",
-            "description": "The remote's host name"
+            "description": "The remote host name."
           },
           {
             "name": "port",
             "type": "string",
-            "description": "The remote's port"
+            "description": "The remote port."
           },
           {
             "name": "level",
             "type": "integer",
-            "description": "The log level to be used"
+            "description": "The log level to use."
           }
         ]
       },
       {
         "name": "connect",
         "type": "function",
-        "description": "Connects to a remote server.",
+        "description": "Connects the socket to the remote server.",
         "async": true,
         "parameters": [
           {
             "name": "id",
             "type": "string",
-            "description": "The unique socket handle"
+            "description": "The unique socket handle."
           }
         ]
       },
       {
         "name": "startTLS",
         "type": "function",
-        "description": "Upgrades the socket to be secure. In case the upgrade fails the socket will be closed",
+        "description": "Upgrades the connected socket to TLS using STARTTLS.",
         "async": true,
         "parameters": [
           {
             "name": "id",
-            "description": "The unique socket handle",
-            "type": "string"
+            "type": "string",
+            "description": "The unique socket handle."
           }
         ]
       },
       {
         "name": "send",
         "type": "function",
-        "description": "Upgrades the socket to be secure. In case the upgrade fails the socket will be closed",
+        "description": "Sends the given byte array over the socket.",
         "async": true,
         "parameters": [
           {
             "name": "id",
-            "description": "The unique socket handle",
-            "type": "string"
+            "type": "string",
+            "description": "The unique socket handle."
           },
           {
             "name": "bytes",
-            "description": "The unique socket handle",
             "type": "array",
+            "description": "The data to send as a byte array.",
             "items": {
               "type": "integer"
             }
@@ -76,62 +76,62 @@
       {
         "name": "isAlive",
         "type": "function",
-        "description": "Checks if the socket is still alive and connected",
+        "description": "Checks whether the specified socket is still alive.",
         "async": true,
         "parameters": [
           {
             "name": "id",
-            "description": "The unique socket handle",
-            "type": "string"
+            "type": "string",
+            "description": "The unique socket handle."
           }
         ]
       },
       {
         "name": "disconnect",
         "type": "function",
-        "description": "Disconnects from the remote server.",
+        "description": "Disconnects the socket from the remote server.",
         "async": true,
         "parameters": [
           {
             "name": "id",
             "type": "string",
-            "description": "the connection id"
+            "description": "The unique socket handle."
           }
         ]
       },
       {
         "name": "destroy",
         "type": "function",
-        "description": "Destroys the given session",
+        "description": "Disconnects and removes the specified socket handle.",
         "async": true,
         "parameters": [
           {
             "name": "id",
             "type": "string",
-            "description": "The sessions unique id"
+            "description": "The unique socket handle."
           }
         ]
       },
       {
         "name": "addCertErrorOverride",
         "type": "function",
-        "description": "Adds a certificate error override for the given cert.",
+        "description": "Adds a certificate exception for the specified host, port, and certificate.",
         "async": true,
         "parameters": [
           {
             "name": "host",
             "type": "string",
-            "description": "The hostname to override"
+            "description": "The hostname for which to add the override."
           },
           {
             "name": "port",
             "type": "string",
-            "description": "The port to override"
+            "description": "The port for which to add the override."
           },
           {
             "name": "rawDER",
             "type": "array",
-            "description": "The server's certificate",
+            "description": "The server certificate as raw DER bytes.",
             "items": {
               "type": "integer"
             }
@@ -139,7 +139,7 @@
           {
             "name": "flags",
             "type": "integer",
-            "description": "The override flags."
+            "description": "The Thunderbird certificate override flags."
           }
         ]
       }
@@ -148,12 +148,12 @@
       {
         "name": "onData",
         "type": "function",
-        "description": "Called when data is received",
+        "description": "Called when data is received on the socket.",
         "parameters": [
           {
             "name": "bytes",
-            "description": "The data received as byte array.",
             "type": "array",
+            "description": "The received data as a byte array.",
             "items": {
               "type": "integer"
             }
@@ -163,48 +163,42 @@
         "extraParameters": [
           {
             "name": "socket",
-            "description": "The socket's unique id",
-            "type": "string"
+            "type": "string",
+            "description": "The unique socket handle."
           }
         ]
       },
       {
         "name": "onError",
         "type": "function",
-        "description": "Called whenever the socket was closed unexpectedly",
+        "description": "Called when the socket encounters an error.",
         "parameters": [
           {
             "name": "error",
             "type": "object",
-            "description": "An object containing details about the error."
+            "description": "An object containing error details."
           }
         ],
         "returns": {},
         "extraParameters": [
           {
             "name": "id",
-            "description": "The socket's unique id",
-            "type": "string"
+            "type": "string",
+            "description": "The unique socket handle."
           }
         ]
       },
       {
         "name": "onClose",
         "type": "function",
-        "description": "Called after the socket was closed.",
-        "parameters": [
-          {
-            "name": "hadError",
-            "description": "True in case the socket was closed due to an error",
-            "type": "boolean"
-          }
-        ],
+        "description": "Called after the socket has been closed.",
+        "parameters": [],
         "returns": {},
         "extraParameters": [
           {
             "name": "id",
-            "description": "The socket's unique id",
-            "type": "string"
+            "type": "string",
+            "description": "The unique socket handle."
           }
         ]
       }

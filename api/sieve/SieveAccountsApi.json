@@ -1,57 +1,57 @@
 [
   {
     "namespace": "sieve.accounts",
-    "description": "Sieve Account Management",
+    "description": "Sieve account integration helpers",
     "functions": [
       {
         "name": "getPassword",
         "type": "function",
-        "description": "Gets a password from the password store",
+        "description": "Gets the password for the specified Thunderbird account if Thunderbird already has it available without prompting.",
         "async": true,
         "parameters": [
           {
             "name": "id",
             "type": "string",
-            "description": "The server's id"
+            "description": "The account key."
           }
         ]
       },
       {
         "name": "getPrettyName",
         "type": "function",
-        "description": "Gets a password from the password store",
+        "description": "Gets the display name of the specified Thunderbird account.",
         "async": true,
         "parameters": [
           {
             "name": "id",
             "type": "string",
-            "description": "The account key"
+            "description": "The account key."
           }
         ]
       },
       {
         "name": "getUsername",
         "type": "function",
-        "description": "Gets a password from the password store",
+        "description": "Gets the effective username for the specified Thunderbird account.",
         "async": true,
         "parameters": [
           {
             "name": "id",
             "type": "string",
-            "description": "The account key"
+            "description": "The account key."
           }
         ]
       },
       {
         "name": "getHostname",
         "type": "function",
-        "description": "Gets a password from the password store",
+        "description": "Gets the effective hostname for the specified Thunderbird account.",
         "async": true,
         "parameters": [
           {
             "name": "id",
             "type": "string",
-            "description": "The account key"
+            "description": "The account key."
           }
         ]
       }
