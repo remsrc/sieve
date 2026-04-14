@@ -98,17 +98,11 @@ The socket implementation is limited to the protocol needs of the extension and 
 
 ---
 
-## Debugging and Test Modes
+## Warnings
 
-The codebase contains optional development flags:
-
-- `DEBUG`  
-  Enables console logging for development and troubleshooting
-
-- `ADDONTEST`  
-  Enables local developer/test workflows without requiring a live production environment
-
-Both flags are disabled by default and are not required for normal extension use.
+- The reported "innerHTML" usage originates exclusively from the bundled Bootstrap library.
+- The extension itself does not assign dynamic or external data to innerHTML. All application logic uses safe DOM APIs (e.g., textContent, createElement).
+- No untrusted content (such as email data, server responses, or user input) is injected into HTML contexts.
 
 ---
 

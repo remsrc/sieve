@@ -15,7 +15,8 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "sieve.remsrc@mozdev.org",
-      "strict_min_version": "128.0"
+      "strict_min_version": "128.0",
+      "strict_max_version": "140.*"
     }
   },
   "permissions": [
