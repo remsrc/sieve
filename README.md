@@ -1,6 +1,6 @@
 # Sieve Editor (Thunderbird Add-on)
 
-This project is a continuation of the original **Sieve Editor** by thsmi (Thomas Schmidt), adapted and refocused for modern Thunderbird environments.
+This project is a continuation of the original **Sieve Editor** by thsmi (Thomas Schmid), adapted and refocused for modern Thunderbird environments.
 
 It brings back the familiar functionality as a **native Thunderbird Add-on (Manifest V2)**, targeting current Thunderbird versions (≥ 128), while preserving the core idea and usability that many users relied on for years.
 
@@ -87,5 +87,5 @@ GNU Affero General Public License v3 (AGPLv3)
 
 ## Acknowledgment
 
-This project is based on the original work by Thomas Schmidt and contributors.  
+This project is based on the original work by thsmi (Thomas Schmid) and contributors.  
 Without the original Sieve Editor, this continuation would not exist.
