@@ -151,4 +151,4 @@ GNU Affero General Public License v3 (AGPLv3)
 
 ## Acknowledgment
 
-This project builds on the original work of thsmi (Thomas Schmidt) and contributors.
+This project builds on the original work of thsmi (Thomas Schmid) and contributors.
