@@ -2,6 +2,62 @@
   {
     "namespace": "sieve.menu",
     "description": "Sieve menu integration helpers",
+    "types": [
+      {
+        "id": "WidgetType",
+        "type": "string",
+        "enum": [
+          "menu-label",
+          "menu-separator",
+          "appmenu-label",
+          "appmenu-separator"
+        ],
+        "description": "The supported widget types."
+      },
+      {
+        "id": "WidgetPosition",
+        "type": "string",
+        "enum": [
+          "before",
+          "after",
+          "child"
+        ],
+        "description": "Defines where the widget is inserted relative to the reference element."
+      },
+      {
+        "id": "MenuWidget",
+        "type": "object",
+        "description": "A widget definition for insertion into Thunderbird menus.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique widget id."
+          },
+          "type": {
+            "$ref": "WidgetType",
+            "description": "The widget type."
+          },
+          "reference": {
+            "type": "string",
+            "description": "The id of the reference DOM element."
+          },
+          "position": {
+            "$ref": "WidgetPosition",
+            "description": "Where to insert the widget relative to the reference element."
+          },
+          "label": {
+            "type": "string",
+            "optional": true,
+            "description": "The label shown for label widgets."
+          },
+          "accesskey": {
+            "type": "string",
+            "optional": true,
+            "description": "Optional access key for label widgets."
+          }
+        }
+      }
+    ],
     "functions": [
       {
         "name": "has",
@@ -34,8 +90,7 @@
           },
           {
             "name": "widget",
-            "type": "object",
-            "description": "The widget definition."
+            "$ref": "MenuWidget"
           }
         ]
       },
