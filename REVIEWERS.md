@@ -125,19 +125,17 @@ Differences include:
 - focus on Thunderbird integration instead of the standalone application model
 - adaptation for current Thunderbird versions and APIs
 - reduced scope centered on practical in-client usability
-- no Azure pipeline references, no donation infrastructure, and no cloud dependencies
+- no Azure pipeline references, and no cloud dependencies
 
 ---
 
 ## Testing
 
-The extension can be tested in two ways:
+The extension can be tested in:
 
 1. **Standard mode**
    - using a configured account with access to a ManageSieve server
-
-2. **Developer / test mode**
-   - using explicitly enabled local test workflows where applicable
+   - debugging flags can be enabled in the settings tab.
 
 This allows functional review without requiring any third-party service beyond the user-configured target server.
 
@@ -151,4 +149,4 @@ GNU Affero General Public License v3 (AGPLv3)
 
 ## Acknowledgment
 
-This project builds on the original work of thsmi (Thomas Schmid) and contributors.
+This project builds on the original work of thsmi (Thomas Schmid) and contributors. The donation infrastructure remains to thsmi. 
