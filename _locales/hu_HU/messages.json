@@ -1,10 +1,10 @@
 {
   "extensionDescription": {
-    "message": "Szita üzenetszűrők kezelése",
+    "message": "Kezeli a Sieve üzenetszűrőket",
     "description": "Description of the extension."
   },
   "menuTitle": {
-    "message": "Szita üzenetszűrők",
+    "message": "Sieve üzenetszűrők",
     "description": "The menu item's name."
   },
   "menuAccessKey": {

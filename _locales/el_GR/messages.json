@@ -1,10 +1,10 @@
 {
   "extensionDescription": {
-    "message": "Manages Sieve Message Filters",
+    "message": "Διαχειρίζεται τα φίλτρα μηνυμάτων Sieve",
     "description": "Description of the extension."
   },
   "menuTitle": {
-    "message": "Sieve Message Filters",
+    "message": "Φίλτρα μηνυμάτων Sieve",
     "description": "The menu item's name."
   },
   "menuAccessKey": {

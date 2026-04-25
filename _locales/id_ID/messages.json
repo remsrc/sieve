@@ -1,10 +1,10 @@
 {
   "extensionDescription": {
-    "message": "Manages Sieve Message Filters",
+    "message": "Mengelola filter pesan Sieve",
     "description": "Description of the extension."
   },
   "menuTitle": {
-    "message": "Sieve Message Filters",
+    "message": "Filter pesan Sieve",
     "description": "The menu item's name."
   },
   "menuAccessKey": {
