@@ -1,0 +1,14 @@
+{
+  "extensionDescription": {
+    "message": "Sieve メッセージフィルターを管理します",
+    "description": "Description of the extension."
+  },
+  "menuTitle": {
+    "message": "Sieve メッセージフィルター",
+    "description": "The menu item's name."
+  },
+  "menuAccessKey": {
+    "message": "S",
+    "description": "The menu item's access key."
+  }
+}

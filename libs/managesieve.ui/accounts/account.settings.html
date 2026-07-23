@@ -1,0 +1,40 @@
+<div>
+  <h4 data-i18n="account.details.title"></h4>
+
+  <div class="mb-3">
+    <label class="form-label" data-i18n="account.details.server"></label>
+    <div class="input-group">
+      <input type="text" class="form-control sieve-settings-hostname"
+        autocomplete="off" spellcheck="false">
+      <span class="input-group-text">:</span>
+      <input type="number" class="form-control sieve-settings-port"
+        min="1" max="65535" inputmode="numeric">
+    </div>
+    <div class="form-text sieve-settings-secure" data-i18n="account.details.secure"></div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label" data-i18n="account.details.username"></label>
+    <input type="text" class="form-control sieve-settings-username"
+      autocomplete="username" spellcheck="false">
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label" data-i18n="password.dialog.password"></label>
+    <input type="password" class="form-control sieve-settings-password"
+      autocomplete="current-password" spellcheck="false">
+    <div class="form-text sieve-settings-password-status"></div>
+  </div>
+
+  <div class="mt-3">
+    <button type="button"
+      data-i18n="editor.save"
+      class="sieve-account-save-settings btn btn-sm btn-primary me-1"></button>
+    <button type="button"
+      data-i18n="credentials.forget"
+      class="sieve-account-clear-password btn btn-sm btn-outline-danger me-1"></button>
+    <button type="button"
+      data-i18n="account.details.debugging.edit"
+      class="sieve-account-edit-debug btn btn-sm btn-outline-secondary"></button>
+  </div>
+</div>

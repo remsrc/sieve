@@ -1,0 +1,22 @@
+# Betriebssystem und Editoren
+.DS_Store
+Thumbs.db
+.vscode/
+.vscode-insiders/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+
+# Thunderbird-Pakete
+*.xpi
+
+# Temporäre Dateien
+*.log
+*.tmp
+*.bak

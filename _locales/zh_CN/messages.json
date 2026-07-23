@@ -1,0 +1,14 @@
+{
+  "extensionDescription": {
+    "message": "管理 Sieve 邮件过滤器",
+    "description": "Description of the extension."
+  },
+  "menuTitle": {
+    "message": "Sieve 邮件过滤器",
+    "description": "The menu item's name."
+  },
+  "menuAccessKey": {
+    "message": "S",
+    "description": "The menu item's access key."
+  }
+}

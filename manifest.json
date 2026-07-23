@@ -1,0 +1,28 @@
+{
+  "name": "Sieve Reloaded",
+  "description": "__MSG_extensionDescription__",
+  "version": "1.0.0",
+  "icons": {
+    "32": "libs/icons/sieve32.png",
+    "64": "libs/icons/sieve64.png",
+    "128": "libs/icons/sieve128.png"
+  },
+  "background": {
+    "page": "background.html"
+  },
+  "manifest_version": 2,
+  "default_locale": "en_US",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "sieve.remsrc@mozdev.org",
+      "strict_min_version": "128.0"
+    }
+  },
+  "permissions": [
+    "accountsRead",
+    "menus",
+    "tabs",
+    "storage",
+    "nativeMessaging"
+  ]
+}

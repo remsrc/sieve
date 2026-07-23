@@ -1,0 +1,14 @@
+{
+  "extensionDescription": {
+    "message": "Hanterar Sieve-meddelandefilter",
+    "description": "Description of the extension."
+  },
+  "menuTitle": {
+    "message": "Sieve-meddelandefilter",
+    "description": "The menu item's name."
+  },
+  "menuAccessKey": {
+    "message": "S",
+    "description": "The menu item's access key."
+  }
+}

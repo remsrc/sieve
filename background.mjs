@@ -1,0 +1,622 @@
+/*
+ * The content of this file is licensed. You may obtain a copy of
+ * the license at https://github.com/thsmi/sieve/ or request it via
+ * email from the author.
+ *
+ * Do not remove or change this comment.
+ *
+ * The initial author of the code is:
+ *   Thomas Schmid <schmid-thomas@gmx.net>
+ */
+/**
+ * Modification (2026-04-04, remsrc)
+ *
+ * Summary:
+ * Added compatibility layer for indentation settings.
+ *
+ * Details:
+ * - Introduced mapping between:
+ *     "indentation-unit" (CM6)
+ *     and legacy keys:
+ *       "indentation-width", "indentation-policy".
+ * - Updated handlers:
+ *     get-preference
+ *     get-default-preference
+ *     set-preference
+ *     set-default-preference
+ * - Ensured backward compatibility with existing stored settings.
+ *
+ * Rationale:
+ * Fixes:
+ *   - "Unknown settings indentation-unit"
+ * by bridging new editor model with legacy settings backend.
+ */
+/* global browser */
+import { SieveSession } from "./libs/libManageSieve/SieveSession.mjs";
+import {
+  SieveCertValidationException,
+  SieveClientException,
+  SieveException
+} from "./libs/libManageSieve/SieveExceptions.mjs";
+
+import { SieveLogger } from "./libs/managesieve.ui/utils/SieveLogger.mjs";
+import { SieveIpcClient } from "./libs/managesieve.ui/utils/SieveIpcClient.mjs";
+import { SieveAccounts } from "./libs/managesieve.ui/settings/logic/SieveAccounts.mjs";
+import { SieveBridgeClient } from "./libs/libManageSieve/SieveBridgeClient.mjs";
+
+(async function () {
+
+  const FIRST_ENTRY = 0;
+
+  const logger = SieveLogger.getInstance();
+  const bridge = SieveBridgeClient.getInstance();
+
+  const accounts = await (new SieveAccounts().load());
+
+  const sessions = new Map();
+  // TODO Extract into separate class..
+  /**
+   * Gets a tab by its script and account name.
+   *
+   * @param {string} account
+   *   the account name
+   * @param {string} name
+   *   the script name
+   *
+   * @returns {*}
+   *   the webextension tab object.
+   */
+  async function getTabs(account, name) {
+    const url = new URL("./libs/managesieve.ui/editor.html", window.location);
+
+    url.searchParams.append("account", account);
+    url.searchParams.append("script", name);
+
+    return await browser.tabs.query({ url: url.toString() });
+  }
+
+  /**
+   *
+   * @param {*} tab
+   */
+  async function showTab(tab) {
+
+    await browser.tabs.update(
+      tab.id,
+      { active: true }
+    );
+
+    await browser.windows.update(
+      tab.windowId,
+      { focused: true }
+    );
+  }
+
+  browser.tabs.onRemoved.addListener(async () => {
+
+    const url = new URL("./libs/managesieve.ui/*", window.location);
+    const tabs = await browser.tabs.query({ url: url.toString() });
+
+    if (tabs.length)
+      return;
+
+    for (const id of accounts.getAccountIds()) {
+      if (!sessions.has(id))
+        continue;
+
+      await (sessions.get(id).disconnect(true));
+      sessions.delete(id);
+    }
+  });
+
+  // ------------------------------------------------------------------------ //
+
+  const MENU_ID = "sieve-reloaded-open";
+
+  /**
+   * Opens the Sieve account overview or focuses an existing tab.
+   */
+  async function openSieveAccounts() {
+    const url = browser.runtime.getURL("libs/managesieve.ui/accounts.html");
+    const tabs = await browser.tabs.query({ url });
+
+    if (tabs.length) {
+      await showTab(tabs[FIRST_ENTRY]);
+      return;
+    }
+
+    await browser.tabs.create({
+      active: true,
+      url
+    });
+  }
+
+  browser.menus.create({
+    id: MENU_ID,
+    title: browser.i18n.getMessage("menuTitle"),
+    contexts: ["tools_menu"]
+  });
+
+  browser.menus.onClicked.addListener(async (info) => {
+    if (info.menuItemId !== MENU_ID)
+      return;
+
+    await openSieveAccounts();
+  });
+
+
+  // ------------------------------------------------------------------------ //
+  function indentationUnitToLegacy(unit) {
+    if (typeof unit !== "string" || unit.length === 0)
+      return { width: 2, tabs: false };
+
+    if (/^\t+$/.test(unit))
+      return { width: unit.length, tabs: true };
+
+    if (/^ +$/.test(unit))
+      return { width: unit.length, tabs: false };
+
+    throw new Error("Invalid indentation-unit");
+  }
+
+  function legacyToIndentationUnit(width, tabs) {
+    width = Number.parseInt(width, 10);
+
+    if (Number.isNaN(width) || width < 1)
+      width = 2;
+
+    return tabs ? "\t".repeat(width) : " ".repeat(width);
+  }
+
+  const actions = {
+    // account endpoints...
+    "accounts-list": async function () {
+      logger.logAction("List Accounts");
+      return await accounts.getAccountIds();
+    },
+
+    "account-get-displayname": async function (msg) {
+      const host = await accounts.getAccountById(msg.payload.account).getHost();
+      return await host.getDisplayName();
+    },
+
+    "account-is-connecting": function(msg) {
+      logger.logAction(`Is connecting ${msg.payload.account}`);
+
+      if (!sessions.has(msg.payload.account))
+        return false;
+
+      return sessions.get(msg.payload.account).isConnecting();
+    },
+
+    "account-connected": function (msg) {
+      logger.logAction(`Is connected ${msg.payload.account}`);
+
+      if (!sessions.has(msg.payload.account))
+        return false;
+
+      return sessions.get(msg.payload.account).isConnected();
+    },
+
+    "account-connect": async function (msg) {
+
+      const id = msg.payload.account;
+      const account = await accounts.getAccountById(id);
+
+      logger.logAction(`Connect ${id}`);
+
+      const host = await account.getHost();
+      const security = await account.getSecurity();
+      const settings = await account.getSettings();
+
+      const options = {
+        "security": await security.getTLS(),
+        "sasl": await security.getMechanism(),
+        "keepAlive": await host.getKeepAlive(),
+        "logLevel": await settings.getLogLevel()
+      };
+
+      const onAuthenticate = async (hasPassword) => {
+
+        logger.logAction(`OnAuthenticate`);
+
+        const authentication = await account.getAuthentication();
+
+        const credentials = {};
+        credentials.username = await authentication.getUsername();
+
+        if (!credentials.username)
+          throw new Error("ManageSieve username is not configured");
+
+        if (hasPassword) {
+          credentials.password = await authentication.getPassword();
+
+          if (!credentials.password)
+            throw new Error("ManageSieve password is not configured");
+        }
+
+        return credentials;
+      };
+
+      const onAuthorize = async () => {
+
+        logger.logAction(`onAuthorize`);
+
+        // We do not support authorization in the web extension
+        return "";
+      };
+
+      if (sessions.has(id))
+        throw new Error("Id already in use");
+
+      sessions.set(id,
+        new SieveSession(id, options));
+
+      sessions.get(id).on("authenticate",
+        async (hasPassword) => { return await onAuthenticate(hasPassword); });
+      sessions.get(id).on("authorize",
+        async () => { return await onAuthorize(); });
+
+      try {
+        await sessions.get(id).connect(await host.getUrl());
+
+        // Connection established, this means we need to listen for any
+        // unplanned disconnects.
+        sessions.get(id).on("disconnected", async () => {
+          await SieveIpcClient.sendMessage("accounts", "account-disconnected", id);
+        });
+
+      } catch (ex) {
+
+        await (actions["account-disconnect"](msg));
+
+        if (ex instanceof SieveCertValidationException) {
+          const secInfo = ex.getSecurityInfo();
+
+          const rv = (await SieveIpcClient.sendMessage(
+            "accounts", "account-show-certerror", secInfo));
+
+          // Dialog was canceled we bail out.
+          if (!rv)
+            return;
+
+          await bridge.trustCertificate(secInfo);
+
+          await (actions["account-connect"](msg));
+          return;
+        }
+
+        // connecting failed for some reason, which means we
+        // need to handle the error.
+        logger.logAction("Connecting failed due to an error " + ex);
+
+        await SieveIpcClient.sendMessage(
+          "accounts", "account-show-error", ex.message);
+      }
+    },
+
+    "account-disconnect": async function (msg) {
+      logger.logAction(`Disconnect ${msg.payload.account}`);
+      const id = msg.payload.account;
+      if (!sessions.has(id))
+        return;
+
+      await (sessions.get(id).disconnect(msg.payload.account));
+      sessions.delete(id);
+    },
+
+    "account-list": async function (msg) {
+      logger.logAction(`List scripts for ${msg.payload.account}`);
+      return await sessions.get(msg.payload.account).listScripts();
+    },
+
+    "account-capabilities": async function (msg) {
+      logger.logAction(`Get capabilities for ${msg.payload.account}`);
+      return await sessions.get(msg.payload.account).capabilities();
+    },
+
+    // Script endpoint...
+    "script-create": async function (msg) {
+      const account = msg.payload.account;
+
+      logger.logAction(`Create script for ${account}`);
+
+      const name = await SieveIpcClient.sendMessage("accounts", "script-show-create", account);
+
+      if (name.trim() !== "")
+        await sessions.get(account).putScript(name, "#test\r\n");
+
+      return name;
+    },
+
+    "script-rename": async function (msg) {
+      const account = msg.payload.account;
+      const oldName = msg.payload.data;
+
+      logger.logAction(`Rename Script ${oldName} for account: ${account}`);
+
+      if ((await getTabs(account, oldName)).length) {
+        await SieveIpcClient.sendMessage("accounts", "script-show-busy", oldName);
+        return false;
+      }
+
+      const newName = await SieveIpcClient.sendMessage("accounts", "script-show-rename", oldName);
+
+      if (newName === oldName)
+        return false;
+
+      await sessions.get(account).renameScript(oldName, newName);
+      return true;
+    },
+
+    "script-delete": async function (msg) {
+      const account = msg.payload.account;
+      const name = msg.payload.data;
+
+      logger.logAction(`Delete Script ${name} for account: ${account}`);
+
+      if ((await getTabs(account, name)).length) {
+        await SieveIpcClient.sendMessage("accounts", "script-show-busy", name);
+        return false;
+      }
+
+      const rv = await SieveIpcClient.sendMessage("accounts", "script-show-delete", name);
+
+      if (rv === true)
+        await sessions.get(account).deleteScript(name);
+
+      return rv;
+    },
+
+    "script-activate": async function (msg) {
+      const account = msg.payload.account;
+      const name = msg.payload.data;
+
+      logger.logAction(`Activate ${name} for ${account}`);
+
+      await sessions.get(account).activateScript(name);
+    },
+
+    "script-deactivate": async function (msg) {
+      const account = msg.payload.account;
+
+      logger.logAction(`Deactivate script for ${account}`);
+
+      await sessions.get(account).activateScript();
+    },
+
+    "script-edit": async function (msg) {
+
+      const name = msg.payload.data;
+      const account = msg.payload.account;
+
+      logger.logAction(`Edit ${name} on ${account}`);
+
+      const url = new URL("./libs/managesieve.ui/editor.html", window.location);
+
+      url.searchParams.append("account", account);
+      url.searchParams.append("script", name);
+
+      const tabs = await getTabs(account, name);
+      if (tabs.length) {
+        await showTab(tabs[FIRST_ENTRY]);
+        return;
+      }
+
+      // create a new tab...
+      await browser.tabs.create({
+        active: true,
+        url: url.toString()
+      });
+    },
+
+    "script-get": async function (msg) {
+      const name = msg.payload.data;
+      const account = msg.payload.account;
+
+      logger.logAction(`Get ${name} for ${account}`);
+
+      return await sessions.get(account).getScript(name);
+    },
+
+    "script-check": async function (msg) {
+      const account = msg.payload.account;
+      const script = msg.payload.data;
+
+      logger.logAction(`Check Script for ${account}`);
+
+      try {
+        await sessions.get(account).checkScript(script);
+      } catch (ex) {
+        // FIXME We need to rethrow incase checkscript returns a SieveServerException.
+        return ex.getResponse().getMessage();
+      }
+
+      return "";
+    },
+
+    "script-save": async function (msg) {
+      const account = msg.payload.account;
+      const name = msg.payload.name;
+      const script = msg.payload.script;
+
+      logger.logAction(`Save ${name} for ${account}`);
+
+      await sessions.get(account).putScript(name, script);
+    },
+
+    "account-get-settings": async function (msg) {
+
+      logger.logAction(`Get settings for ${msg.payload.account}`);
+
+      const account = accounts.getAccountById(msg.payload.account);
+      const host = await account.getHost();
+      const authentication = await account.getAuthentication();
+      const security = await account.getSecurity();
+
+      return {
+        displayName: await host.getDisplayName(),
+        hostname: await host.getHostname(),
+        port: await host.getPort(),
+
+        security: await security.getTLS(),
+        mechanism: await security.getMechanism(),
+
+        username: await authentication.getUsername(),
+        hasPassword: await authentication.hasPassword(),
+        passwordStorage: await authentication.getPasswordStorage()
+      };
+    },
+
+    "account-set-settings": async function (msg) {
+
+      logger.logAction(`Set settings for ${msg.payload.account}`);
+
+      const account = accounts.getAccountById(msg.payload.account);
+      const host = await account.getHost();
+      const authentication = await account.getAuthentication();
+
+      await host.setHostname(msg.payload.hostname);
+      await host.setPort(msg.payload.port);
+      await authentication.setUsername(msg.payload.username);
+
+      if (Object.prototype.hasOwnProperty.call(msg.payload, "password"))
+        await authentication.setPassword(msg.payload.password);
+
+      return await actions["account-get-settings"](msg);
+    },
+
+    "account-clear-password": async function (msg) {
+
+      logger.logAction(`Clear password for ${msg.payload.account}`);
+
+      const account = accounts.getAccountById(msg.payload.account);
+      const authentication = await account.getAuthentication();
+      await authentication.clearPassword();
+
+      return await actions["account-get-settings"](msg);
+    },
+
+    // eslint-disable-next-line no-unused-vars
+    "settings-get-loglevel": async function (msg) {
+      return await accounts.getLogLevel();
+    },
+
+    "account-settings-set-debug": async function (msg) {
+
+      logger.logAction(`Set Debug Level for ${msg.payload.account}`);
+
+      const account = accounts.getAccountById(msg.payload.account);
+
+      await account.getSettings().setLogLevel(msg.payload.levels.account);
+      await accounts.setLogLevel(msg.payload.levels.global);
+    },
+
+    "account-settings-get-debug": async function (msg) {
+
+      logger.logAction(`Get Debug Level for ${msg.payload.account}`);
+
+      const account = accounts.getAccountById(msg.payload.account);
+
+      return {
+        "account": await account.getSettings().getLogLevel(),
+        "global": await accounts.getLogLevel()
+      };
+    },
+
+    "get-preference": async (msg) => {
+      const name = msg.payload.data;
+      const account = msg.payload.account;
+
+      logger.logAction(`Get value ${name} on ${account}`);
+
+      const editor = accounts.getAccountById(account).getEditor();
+
+      if (name === "indentation-unit") {
+        let width = await editor.getValue("indentation-width");
+        let tabs = await editor.getValue("indentation-policy");
+
+        if (width === null || typeof width === "undefined")
+          width = await accounts.getEditor().getValue("indentation-width");
+
+        if (tabs === null || typeof tabs === "undefined")
+          tabs = await accounts.getEditor().getValue("indentation-policy");
+
+        return legacyToIndentationUnit(width, tabs);
+      }
+
+      const value = await editor.getValue(name);
+
+      if (value === null)
+        return await actions["get-default-preference"](msg);
+
+      return value;
+    },
+
+    "get-default-preference": async (msg) => {
+      const name = msg.payload.data;
+
+      logger.logAction(`Get default value for ${name}`);
+
+      const editor = accounts.getEditor();
+
+      if (name === "indentation-unit") {
+        const width = await editor.getValue("indentation-width");
+        const tabs = await editor.getValue("indentation-policy");
+        return legacyToIndentationUnit(width, tabs);
+      }
+
+      return await editor.getValue(name);
+    },
+
+    "set-preference": async (msg) => {
+      const name = msg.payload.key;
+      const value = msg.payload.value;
+      const account = msg.payload.account;
+
+      logger.logAction(`Set value ${name} on ${account}`);
+
+      const editor = accounts.getAccountById(account).getEditor();
+
+      if (name === "indentation-unit") {
+        const legacy = indentationUnitToLegacy(value);
+        await editor.setValue("indentation-width", legacy.width);
+        await editor.setValue("indentation-policy", legacy.tabs);
+        return;
+      }
+
+      await editor.setValue(name, value);
+    },
+
+    "set-default-preference": async (msg) => {
+      const name = msg.payload.key;
+      const value = msg.payload.value;
+
+      logger.logAction(`Set default value for ${name}`);
+
+      const editor = accounts.getEditor();
+
+      if (name === "indentation-unit") {
+        const legacy = indentationUnitToLegacy(value);
+        await editor.setValue("indentation-width", legacy.width);
+        await editor.setValue("indentation-policy", legacy.tabs);
+        return;
+      }
+
+      await editor.setValue(name, value);
+    },
+    "open-developer-tools": async function () {
+      logger.logAction("Open developer tools");
+      return false;
+    },
+
+    "reload-ui": async function () {
+      logger.logAction("Reload UI");
+      browser.runtime.reload();
+    }
+  }
+  for (const [key, value] of Object.entries(actions)) {
+    SieveIpcClient.setRequestHandler("core", key, value);
+  }
+
+})(this);

@@ -1,0 +1,14 @@
+{
+  "extensionDescription": {
+    "message": "Διαχειρίζεται τα φίλτρα μηνυμάτων Sieve",
+    "description": "Description of the extension."
+  },
+  "menuTitle": {
+    "message": "Φίλτρα μηνυμάτων Sieve",
+    "description": "The menu item's name."
+  },
+  "menuAccessKey": {
+    "message": "S",
+    "description": "The menu item's access key."
+  }
+}

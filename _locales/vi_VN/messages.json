@@ -1,0 +1,14 @@
+{
+  "extensionDescription": {
+    "message": "Quản lý bộ lọc thư Sieve",
+    "description": "Description of the extension."
+  },
+  "menuTitle": {
+    "message": "Bộ lọc thư Sieve",
+    "description": "The menu item's name."
+  },
+  "menuAccessKey": {
+    "message": "S",
+    "description": "The menu item's access key."
+  }
+}
