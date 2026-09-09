@@ -69,6 +69,50 @@ If Thunderbird reports that the Native Messaging host cannot be found, verify th
 
 ---
 
+## Usage
+
+Sieve Reloaded has no toolbar button and no options page. Its entry point is a single item that the add-on registers in Thunderbird's **Tools** menu.
+
+### Opening the Sieve Message Filters tab
+
+1. Restart Thunderbird completely after installing the add-on and the bridge.
+2. Open the **Tools** menu:
+   - If the classic menu bar is visible, click **Tools** at the top of the window.
+   - Otherwise click the **☰** application-menu button in the top-right corner and select **Tools** (pressing `Alt` reveals the menu bar temporarily).
+3. Click **Sieve Message Filters**. A new tab with the same title opens.
+
+### Account overview
+
+The tab shows one card for each of your Thunderbird mail accounts (IMAP and POP3). ManageSieve servers are not configured globally — every card carries its own server settings:
+
+- The card's main tab, named after the account, lists the Sieve scripts on that server.
+- The **Settings** tab holds the connection details:
+
+  | Field | Meaning |
+  |---|---|
+  | Server | ManageSieve hostname (often `sieve.<your-domain>`) and port. The standard port is **4190** (RFC 5804). |
+  | Username | Usually your full e-mail address. |
+  | Password | Stored in the operating system's credential store through the bridge (Secret Service/libsecret or KWallet) when a secure backend is available. Otherwise the add-on keeps it in its local storage. |
+  | Authentication | SASL mechanism used for the login. |
+  | Fingerprint | SHA-256 fingerprint of the server certificate. |
+
+  Save the settings; the add-on then connects to the server.
+
+### Managing scripts
+
+- Once the account is connected, its main tab lists the scripts stored on the server; the currently active script is marked.
+- **New script** creates an additional script. When no scripts exist yet, the card shows an empty state with a **Create new Script** button.
+- Clicking a script opens the built-in editor in a new tab. There you can edit the script, check its syntax, save it, and activate or deactivate it. Activating a script deploys it to the server, where it takes effect immediately.
+- The **☰** menu on each card offers **Settings**, **Disconnect**, **Reconnect**, and **Show Server Capabilities** (the extensions and languages your server supports).
+- **Debugging**, inside the Settings tab, shows the add-on's log — useful when reporting connection problems.
+
+### Notes on the first connection
+
+- The bridge validates the server certificate against the operating system's trust store. If validation fails, a dialog shows the certificate fingerprints for explicit approval; after approval the certificate is pinned by SHA-256 and used for subsequent connections.
+- Sieve scripts run on the mail server. The add-on only manages them — it does not execute filtering locally.
+
+---
+
 ## Purpose
 
 This project intentionally focuses on:
